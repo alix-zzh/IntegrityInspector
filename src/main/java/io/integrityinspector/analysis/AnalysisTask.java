@@ -20,7 +20,8 @@ public class AnalysisTask<T extends FileCheck, K extends FileChecker<T>> impleme
 
     @Override
     public List<T> call() {
-        LOG.info("Processing analysis in multi-thread, batch: {}", baselineList.stream().map(Project::getName).reduce((x, y) -> x + ", " + y).orElse(" - "));
+        LOG.info("Processing analysis in multi-thread, batch: {}",
+                baselineList.stream().map(Project::getName).reduce((x, y) -> x + ", " + y).orElse(" - "));
 
         return fullProjectChecker.checkProject(check, baselineList);
     }

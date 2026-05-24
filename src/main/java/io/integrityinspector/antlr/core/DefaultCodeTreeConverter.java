@@ -28,6 +28,9 @@ public class DefaultCodeTreeConverter implements CodeTreeConverter {
             if (tree.getChildCount() == 1) {
                 node.setState(child.getState());
                 node.setChildren(child.getChildren());
+                for (CodeTree adoptedChild : node.getChildren()) {
+                    adoptedChild.setParent(node);
+                }
             } else {
                 node.getChildren().add(child);
                 child.setParent(node);

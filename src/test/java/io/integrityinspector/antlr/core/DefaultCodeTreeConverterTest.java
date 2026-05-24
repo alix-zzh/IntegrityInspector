@@ -9,6 +9,10 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+
 public class DefaultCodeTreeConverterTest {
     private static final String code =
             "def main():\n" +
@@ -25,17 +29,17 @@ public class DefaultCodeTreeConverterTest {
         Python3Parser parser = new Python3Parser(tokens);
         ParseTree tree = parser.file_input();
 
-        CodeTree ch3 = new CodeTree(689);
-        CodeTree ch2 = new CodeTree(492);
-        CodeTree ch1 = new CodeTree(260);
-        ch2.getChildren().add(ch3);
-        ch1.getChildren().add(ch2);
-        CodeTree expected = new CodeTree(-1);
-        expected.getChildren().add(ch1);
-        ch3.setParent(ch2);
-        ch2.setParent(ch1);
-        ch1.setParent(expected);
         CodeTree actual = converter.convertCodeTreeNode(tree);
-//        assertEquals(expected, actual);
+
+        assertEquals(Integer.valueOf(-1), actual.getState());
+        assertFalse(actual.getChildren().isEmpty());
+        assertTreeParentsAreLinked(actual);
+    }
+
+    private void assertTreeParentsAreLinked(CodeTree node) {
+        for (CodeTree child : node.getChildren()) {
+            assertSame(node, child.getParent());
+            assertTreeParentsAreLinked(child);
+        }
     }
 }

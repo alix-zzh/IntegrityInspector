@@ -1,9 +1,10 @@
 package io.integrityinspector.config;
 
 import com.google.gson.Gson;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,12 +13,13 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class AppConfigReaderTest {
-    public static final String CONFIG_JSON = "./config_1.json";
     private static final AppConfigReader configReader = new AppConfigReader();
     private static final AppConfig expected;
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private File configFile;
 
     static {
         Set<String> set6 = new HashSet<>();
@@ -57,22 +59,17 @@ public class AppConfigReaderTest {
 
     @Before
     public void before() throws IOException {
+        configFile = temporaryFolder.newFile("config.json");
         Gson gson = new Gson();
         String str = gson.toJson(expected);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("./config_1.json"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(configFile));
         writer.write(str);
         writer.close();
     }
 
-    @After
-    public void after() {
-        boolean deleteResult = new File("./config_1.json").delete();
-        assertTrue(deleteResult);
-    }
-
     @Test
     public void readFromPathTest() throws IOException {
-        AppConfig actual = configReader.read(CONFIG_JSON);
+        AppConfig actual = configReader.read(configFile.getAbsolutePath());
         assertEquals(expected, actual);
     }
 
