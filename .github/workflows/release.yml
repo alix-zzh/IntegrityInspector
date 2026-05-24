@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_APP_TOKEN }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -36,10 +36,46 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Configure git user
+      - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "GPG_PRIVATE_KEY secret is required to sign release commits." >&2
+            exit 1
+          fi
+
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Configure git user
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+        run: |
+          if [ -z "$GPG_SIGNING_KEY" ]; then
+            echo "GPG_SIGNING_KEY secret is required to sign release commits." >&2
+            exit 1
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config commit.gpgsign true
+          git config user.signingkey "$GPG_SIGNING_KEY"
+          git config gpg.program gpg
+          if [ -n "$GPG_PASSPHRASE" ]; then
+            git config gpg.program "$(pwd)/.github-gpg-sign"
+            cat > .github-gpg-sign <<'SH'
+          #!/usr/bin/env sh
+          exec gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" "$@"
+          SH
+            chmod +x .github-gpg-sign
+          fi
 
       - name: Resolve release version
         id: version
