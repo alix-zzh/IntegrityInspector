@@ -6,7 +6,7 @@
 
     <groupId>io.integrityinspector</groupId>
     <artifactId>IntegrityInspector</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
