@@ -101,7 +101,9 @@ report_<project-name>.json
 
 There is no CLI flag for changing the output directory yet. The `JsonWriter` class supports an output directory constructor for programmatic use and tests.
 
-See `docs/REPORT_FORMAT.md` for the JSON schema, metric definitions, tree similarity interpretation, and `view/report_reader.html` usage.
+Open `view/report_reader.html` in a browser to load a JSON report as an HTML document with summary metrics, per-file uniqueness, expandable similar-line details, and tree similarity entries. A complete sample report is available at `view/report_example.json`.
+
+See `docs/REPORT_FORMAT.md` for the JSON schema, metric definitions, tree similarity interpretation, and HTML reader usage.
 
 ## Configuration
 

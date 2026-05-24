@@ -110,12 +110,22 @@ Unsupported tree comparisons are represented internally as `Integer.MAX_VALUE` a
 
 ## HTML Report Reader
 
-`view/report_reader.html` is a lightweight local JSON viewer. It does not perform custom report visualization yet.
+`view/report_reader.html` is a lightweight local HTML report reader for JSON reports. It renders:
+
+- top-level uniqueness and ZZH-1 metrics;
+- match counts per baseline project;
+- per-file uniqueness;
+- checked source lines, colored by whether similar baseline lines were found;
+- expandable similar-line details with project, file, line text, and distance metrics;
+- tree similarity entries when the JSON report contains `codeTreeSimilarityList`;
+- a collapsible raw JSON view for debugging.
 
 Usage:
 
 1. Open `view/report_reader.html` in a browser.
 2. Drop a `report_<project-name>.json` file onto the page, or click the drop zone and select a report.
-3. The page pretty-prints the JSON.
+3. Inspect the rendered report. Matched lines can be expanded to show similar baseline lines.
+
+For a complete sample that exercises line matches, unique lines, baseline counts, empty file checks, and tree similarity, load `view/report_example.json`.
 
 Because it uses the browser `FileReader` API, it can read local files selected by the user without a local web server.

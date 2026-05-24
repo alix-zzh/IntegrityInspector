@@ -1,0 +1,201 @@
+{
+  "totalUniquenessPercentage": 62.50,
+  "zzh1UniquenessCoefficient": 0.74,
+  "projectChecks": [
+    {
+      "codeFileName": "demo_projects/check/ProjCheck/src/main/java/com/acme/order/OrderService.java",
+      "uniqueStringPresent": 57.14,
+      "checkedLines": [
+        {
+          "line": {
+            "lineIndex": 12,
+            "content": "public final class OrderService {",
+            "contentFiltered": "publicfinalclassorderservice"
+          },
+          "similarLines": []
+        },
+        {
+          "line": {
+            "lineIndex": 18,
+            "content": "private final DiscountPolicy discountPolicy;",
+            "contentFiltered": "privatefinaldiscountpolicydiscountpolicy"
+          },
+          "similarLines": []
+        },
+        {
+          "line": {
+            "lineIndex": 24,
+            "content": "public Receipt checkout(Cart cart, Customer customer) {",
+            "contentFiltered": "publicreceiptcheckoutcartcartcustomercustomer"
+          },
+          "similarLines": [
+            {
+              "project": "ProjA",
+              "file": "demo_projects/baseline/ProjA/src/main/java/com/example/order/CheckoutService.java",
+              "levenshteinDistance": 0.18,
+              "cosineDistance": 0.07,
+              "jaccardDistance": 0.12,
+              "line": {
+                "lineIndex": 31,
+                "content": "public Receipt checkout(Cart cart, Customer customer) {",
+                "contentFiltered": "publicreceiptcheckoutcartcartcustomercustomer"
+              }
+            },
+            {
+              "project": "ProjB",
+              "file": "demo_projects/baseline/ProjB/src/main/java/org/sample/sales/SalesService.java",
+              "levenshteinDistance": 0.27,
+              "cosineDistance": 0.11,
+              "jaccardDistance": 0.20,
+              "line": {
+                "lineIndex": 19,
+                "content": "public Receipt process(Cart cart, Customer customer) {",
+                "contentFiltered": "publicreceiptprocesscartcartcustomercustomer"
+              }
+            }
+          ]
+        },
+        {
+          "line": {
+            "lineIndex": 25,
+            "content": "BigDecimal subtotal = cart.items().stream()",
+            "contentFiltered": "bigdecimalsubtotalcartitemsstream"
+          },
+          "similarLines": [
+            {
+              "project": "ProjA",
+              "file": "demo_projects/baseline/ProjA/src/main/java/com/example/order/CheckoutService.java",
+              "levenshteinDistance": 0.10,
+              "cosineDistance": 0.04,
+              "jaccardDistance": 0.08,
+              "line": {
+                "lineIndex": 32,
+                "content": "BigDecimal subtotal = cart.items().stream()",
+                "contentFiltered": "bigdecimalsubtotalcartitemsstream"
+              }
+            }
+          ]
+        },
+        {
+          "line": {
+            "lineIndex": 26,
+            "content": ".map(LineItem::total)",
+            "contentFiltered": "maplineitemtotal"
+          },
+          "similarLines": [
+            {
+              "project": "ProjA",
+              "file": "demo_projects/baseline/ProjA/src/main/java/com/example/order/CheckoutService.java",
+              "levenshteinDistance": 0.00,
+              "cosineDistance": 0.00,
+              "jaccardDistance": 0.00,
+              "line": {
+                "lineIndex": 33,
+                "content": ".map(LineItem::total)",
+                "contentFiltered": "maplineitemtotal"
+              }
+            }
+          ]
+        },
+        {
+          "line": {
+            "lineIndex": 27,
+            "content": ".reduce(BigDecimal.ZERO, BigDecimal::add);",
+            "contentFiltered": "reducebigdecimalzerobigdecimaladd"
+          },
+          "similarLines": []
+        },
+        {
+          "line": {
+            "lineIndex": 30,
+            "content": "return new Receipt(customer.id(), subtotal, discount, total);",
+            "contentFiltered": "returnnewreceiptcustomeridsubtotaldiscounttotal"
+          },
+          "similarLines": []
+        }
+      ],
+      "codeTreeSimilarityList": [
+        {
+          "project": "ProjA",
+          "codeFileName": "demo_projects/baseline/ProjA/src/main/java/com/example/order/CheckoutService.java",
+          "similarityScore": 17
+        },
+        {
+          "project": "ProjB",
+          "codeFileName": "demo_projects/baseline/ProjB/src/main/java/org/sample/sales/SalesService.java",
+          "similarityScore": 42
+        }
+      ]
+    },
+    {
+      "codeFileName": "demo_projects/check/ProjCheck/src/main/python/notebook_export.py",
+      "uniqueStringPresent": 66.67,
+      "checkedLines": [
+        {
+          "line": {
+            "lineIndex": 4,
+            "content": "def normalize_scores(rows):",
+            "contentFiltered": "defnormalizescoresrows"
+          },
+          "similarLines": [
+            {
+              "project": "ProjC",
+              "file": "demo_projects/baseline/ProjC/analysis/features.py",
+              "levenshteinDistance": 0.21,
+              "cosineDistance": 0.09,
+              "jaccardDistance": 0.16,
+              "line": {
+                "lineIndex": 8,
+                "content": "def normalize_scores(records):",
+                "contentFiltered": "defnormalizescoresrecords"
+              }
+            }
+          ]
+        },
+        {
+          "line": {
+            "lineIndex": 5,
+            "content": "    max_score = max(row['score'] for row in rows)",
+            "contentFiltered": "maxscoremaxrowscoreforrowinrows"
+          },
+          "similarLines": []
+        },
+        {
+          "line": {
+            "lineIndex": 6,
+            "content": "    return [{**row, 'score': row['score'] / max_score} for row in rows]",
+            "contentFiltered": "returnrowscorerowscoremaxscoreforrowinrows"
+          },
+          "similarLines": []
+        }
+      ],
+      "codeTreeSimilarityList": [
+        {
+          "project": "ProjC",
+          "codeFileName": "demo_projects/baseline/ProjC/analysis/features.py",
+          "similarityScore": 9
+        }
+      ]
+    },
+    {
+      "codeFileName": "demo_projects/check/ProjCheck/README.md",
+      "uniqueStringPresent": 100.00,
+      "checkedLines": [],
+      "codeTreeSimilarityList": []
+    }
+  ],
+  "countPerProject": [
+    {
+      "name": "ProjA",
+      "count": 3
+    },
+    {
+      "name": "ProjB",
+      "count": 1
+    },
+    {
+      "name": "ProjC",
+      "count": 1
+    }
+  ]
+}

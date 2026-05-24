@@ -3,82 +3,704 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON File Viewer</title>
+    <title>IntegrityInspector Report</title>
     <style>
+        :root {
+            color-scheme: light;
+            --bg: #f5f7fb;
+            --surface: #ffffff;
+            --surface-soft: #f0f4f8;
+            --border: #d7dee8;
+            --text: #172033;
+            --muted: #667085;
+            --header: #26313f;
+            --accent: #2563eb;
+            --ok: #11875d;
+            --ok-bg: #e9f8f1;
+            --bad: #b42318;
+            --bad-bg: #fff0ed;
+            --warn: #a15c07;
+            --warn-bg: #fff6df;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.45;
         }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .topbar {
+            background: var(--header);
+            color: #fff;
+            padding: 18px 24px;
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: 1.45rem;
+            font-weight: 700;
+        }
+
+        .topbar p {
+            margin: 4px 0 0;
+            color: #d9e2ef;
+            font-size: .92rem;
+        }
+
+        main {
+            width: min(1180px, calc(100% - 32px));
+            margin: 20px auto 48px;
+        }
+
         .drop-zone {
-            max-width: 600px;
-            margin: auto;
-            padding: 40px;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            min-height: 136px;
+            padding: 24px;
+            border: 2px dashed #9aa8bc;
+            border-radius: 8px;
+            background: var(--surface);
             text-align: center;
-            background-color: #fff;
             cursor: pointer;
+            transition: border-color .15s ease, background .15s ease;
         }
-        .drop-zone:hover {
-            background-color: #e1e1e1;
+
+        .drop-zone:hover,
+        .drop-zone.is-over {
+            border-color: var(--accent);
+            background: #eef5ff;
         }
-        pre {
-            text-align: left;
+
+        .drop-zone strong {
+            display: block;
+            font-size: 1.05rem;
+        }
+
+        .drop-zone span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: .9rem;
+        }
+
+        .error {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid #f3b4ad;
+            border-radius: 8px;
+            background: var(--bad-bg);
+            color: var(--bad);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .metric,
+        .section,
+        .file-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .metric {
+            padding: 16px;
+        }
+
+        .metric .label {
+            color: var(--muted);
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .metric .value {
+            margin-top: 6px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .metric .hint {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: .85rem;
+        }
+
+        .section {
+            margin-top: 18px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--surface-soft);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .section-body {
+            padding: 16px;
+        }
+
+        .counts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .count-item {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .count-name {
+            font-weight: 700;
+        }
+
+        .count-value {
+            margin-top: 4px;
+            color: var(--muted);
+        }
+
+        .files {
+            display: grid;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .file-card {
+            overflow: hidden;
+        }
+
+        .file-summary {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px 16px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .file-name {
+            min-width: 0;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: .82rem;
+            white-space: nowrap;
+        }
+
+        .pill.ok {
+            background: var(--ok-bg);
+            color: var(--ok);
+        }
+
+        .pill.bad {
+            background: var(--bad-bg);
+            color: var(--bad);
+        }
+
+        .pill.warn {
+            background: var(--warn-bg);
+            color: var(--warn);
+        }
+
+        .line-list {
+            display: grid;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        details.line {
+            background: #fff;
+        }
+
+        details.line[open] summary {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .line summary {
+            display: grid;
+            grid-template-columns: 74px minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: start;
+            padding: 9px 12px;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .line summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .line.unique summary {
+            background: var(--ok-bg);
+        }
+
+        .line.matched summary {
+            background: var(--bad-bg);
+        }
+
+        .line-number {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        pre.code {
+            margin: 0;
             white-space: pre-wrap;
-            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            font-size: .86rem;
+        }
+
+        .matches {
+            display: grid;
+            gap: 10px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .match {
+            border: 1px dashed #9aa8bc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .match-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--surface-soft);
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+        .match-code {
+            padding: 9px 10px;
+        }
+
+        .empty {
+            padding: 18px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .tree-list {
+            display: grid;
+            gap: 8px;
+            padding: 12px 16px 16px;
+            border-top: 1px solid var(--border);
+            background: #fbfcfe;
+        }
+
+        .tree-title {
+            margin: 0;
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .tree-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .tree-item div {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .raw-toggle {
+            margin-top: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .raw-toggle summary {
+            padding: 12px 14px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .raw-toggle pre {
+            margin: 0;
+            padding: 14px;
+            border-top: 1px solid var(--border);
+            overflow: auto;
+            max-height: 460px;
+            background: #101828;
+            color: #eef4ff;
+            font-size: .82rem;
+        }
+
+        @media (max-width: 780px) {
+            main {
+                width: min(100% - 20px, 1180px);
+            }
+
+            .summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .file-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .line summary {
+                grid-template-columns: 48px minmax(0, 1fr);
+            }
+
+            .line summary .pill {
+                grid-column: 2;
+                justify-self: start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="drop-zone" id="drop-zone">
-        Drop JSON file here or click to upload
-    </div>
-    <pre id="output"></pre>
+    <header class="topbar">
+        <h1>Code Analysis For Plagiarism</h1>
+        <p>Load an IntegrityInspector JSON report to inspect uniqueness, matched lines, and tree similarity.</p>
+    </header>
+
+    <main>
+        <label class="drop-zone" id="drop-zone" for="file-input">
+            <span>
+                <strong>Drop report JSON here or click to upload</strong>
+                <span>Expected file name: report_&lt;project-name&gt;.json</span>
+            </span>
+        </label>
+        <input class="hidden" id="file-input" type="file" accept=".json,application/json">
+        <div class="error hidden" id="error"></div>
+        <section id="report"></section>
+    </main>
 
     <script>
-        const dropZone = document.getElementById('drop-zone');
-        const output = document.getElementById('output');
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+        const reportRoot = document.getElementById("report");
+        const errorBox = document.getElementById("error");
 
-        dropZone.addEventListener('click', () => {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.json';
-            fileInput.onchange = handleFile;
-            fileInput.click();
-        });
-
-        dropZone.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            dropZone.classList.add('hover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('hover');
-        });
-
-        dropZone.addEventListener('drop', (event) => {
-            event.preventDefault();
-            dropZone.classList.remove('hover');
-            const files = event.dataTransfer.files;
-            if (files.length) {
-                handleFile({ target: { files: files } });
+        fileInput.addEventListener("change", event => {
+            const file = event.target.files && event.target.files[0];
+            if (file) {
+                readReportFile(file);
             }
         });
 
-        function handleFile(event) {
-            const file = event.target.files[0];
+        dropZone.addEventListener("dragover", event => {
+            event.preventDefault();
+            dropZone.classList.add("is-over");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("is-over");
+        });
+
+        dropZone.addEventListener("drop", event => {
+            event.preventDefault();
+            dropZone.classList.remove("is-over");
+            const file = event.dataTransfer.files && event.dataTransfer.files[0];
+            if (file) {
+                readReportFile(file);
+            }
+        });
+
+        function readReportFile(file) {
             const reader = new FileReader();
 
-            reader.onload = function(event) {
-                const json = JSON.parse(event.target.result);
-                output.textContent = JSON.stringify(json, null, 2);
+            reader.onload = event => {
+                try {
+                    const report = JSON.parse(event.target.result);
+                    renderReport(report, file.name);
+                    clearError();
+                } catch (error) {
+                    showError("Could not parse JSON report: " + error.message);
+                }
             };
 
-            if (file) {
-                reader.readAsText(file);
+            reader.onerror = () => {
+                showError("Could not read the selected file.");
+            };
+
+            reader.readAsText(file);
+        }
+
+        function renderReport(report, fileName) {
+            const projectChecks = asArray(report.projectChecks);
+            const totalLines = projectChecks.reduce((sum, fileCheck) => sum + asArray(fileCheck.checkedLines).length, 0);
+            const matchedLines = projectChecks.reduce((sum, fileCheck) => {
+                return sum + asArray(fileCheck.checkedLines).filter(line => asArray(line.similarLines).length > 0).length;
+            }, 0);
+            const treeMatches = projectChecks.reduce((sum, fileCheck) => sum + asArray(fileCheck.codeTreeSimilarityList).length, 0);
+
+            reportRoot.innerHTML = [
+                renderSummary(report, fileName, projectChecks.length, totalLines, matchedLines, treeMatches),
+                renderCounts(report.countPerProject),
+                renderFiles(projectChecks),
+                renderRawReport(report)
+            ].join("");
+        }
+
+        function renderSummary(report, fileName, fileCount, totalLines, matchedLines, treeMatches) {
+            return `
+                <section class="summary" aria-label="Report summary">
+                    ${metric("Report", fileName, "loaded JSON file")}
+                    ${metric("Total uniqueness", formatPercent(report.totalUniquenessPercentage), "higher means fewer matches")}
+                    ${metric("ZZH-1 coefficient", formatValue(report.zzh1UniquenessCoefficient), "internal score")}
+                    ${metric("Files", String(fileCount), `${totalLines} checked lines, ${matchedLines} matched`)}
+                    ${treeMatches > 0 ? metric("Tree matches", String(treeMatches), "lower score is more similar") : ""}
+                </section>
+            `;
+        }
+
+        function metric(label, value, hint) {
+            return `
+                <article class="metric">
+                    <div class="label">${escapeHtml(label)}</div>
+                    <div class="value">${escapeHtml(value)}</div>
+                    <div class="hint">${escapeHtml(hint)}</div>
+                </article>
+            `;
+        }
+
+        function renderCounts(countPerProject) {
+            const counts = asArray(countPerProject);
+            const body = counts.length === 0
+                ? `<div class="empty">No baseline project match counts are present in this report.</div>`
+                : `<div class="counts">${counts.map(count => `
+                    <div class="count-item">
+                        <div class="count-name">${escapeHtml(count.name || "Unknown project")}</div>
+                        <div class="count-value">Count: ${escapeHtml(formatValue(count.count))}</div>
+                    </div>
+                `).join("")}</div>`;
+
+            return section("Matches Per Baseline Project", body);
+        }
+
+        function renderFiles(projectChecks) {
+            if (projectChecks.length === 0) {
+                return section("Project Files", `<div class="empty">No file checks are present in this report.</div>`);
             }
+
+            return `
+                <div class="files">
+                    ${projectChecks.map(renderFileCheck).join("")}
+                </div>
+            `;
+        }
+
+        function renderFileCheck(fileCheck) {
+            const checkedLines = asArray(fileCheck.checkedLines);
+            const matchedLines = checkedLines.filter(line => asArray(line.similarLines).length > 0).length;
+            const uniqueLines = checkedLines.length - matchedLines;
+            const matchPillClass = matchedLines > 0 ? "bad" : "ok";
+            const lineList = checkedLines.length === 0
+                ? `<div class="empty">No checked lines are present for this file.</div>`
+                : `<div class="line-list">${checkedLines.map(renderCheckedLine).join("")}</div>`;
+
+            return `
+                <article class="file-card">
+                    <div class="file-summary">
+                        <div class="file-name">${escapeHtml(fileCheck.codeFileName || "Unknown file")}</div>
+                        <span class="pill ok">Uniqueness: ${formatPercent(fileCheck.uniqueStringPresent)}</span>
+                        <span class="pill ${matchPillClass}">${matchedLines} matched / ${uniqueLines} unique</span>
+                    </div>
+                    ${lineList}
+                    ${renderTreeSimilarity(fileCheck.codeTreeSimilarityList)}
+                </article>
+            `;
+        }
+
+        function renderCheckedLine(checkedLine) {
+            const similarLines = asArray(checkedLine.similarLines);
+            const line = checkedLine.line || {};
+            const isMatched = similarLines.length > 0;
+            const detailsClass = isMatched ? "line matched" : "line unique";
+            const statusPill = isMatched
+                ? `<span class="pill bad">${similarLines.length} similar</span>`
+                : `<span class="pill ok">unique</span>`;
+            const matches = isMatched ? renderSimilarLines(similarLines) : "";
+
+            return `
+                <details class="${detailsClass}" ${isMatched ? "" : ""}>
+                    <summary>
+                        <span class="line-number">${escapeHtml(formatLineNumber(line.lineIndex))}</span>
+                        <pre class="code">${escapeHtml(line.content || "")}</pre>
+                        ${statusPill}
+                    </summary>
+                    ${matches}
+                </details>
+            `;
+        }
+
+        function renderSimilarLines(similarLines) {
+            return `
+                <div class="matches">
+                    ${similarLines.map(similarLine => {
+                        const line = similarLine.line || {};
+                        return `
+                            <div class="match">
+                                <div class="match-meta">
+                                    <span>Project: ${escapeHtml(similarLine.project || "Unknown")}</span>
+                                    <span>File: ${escapeHtml(similarLine.file || "Unknown")}</span>
+                                    <span>Levenshtein: ${escapeHtml(formatValue(similarLine.levenshteinDistance))}</span>
+                                    <span>Cosine: ${escapeHtml(formatValue(similarLine.cosineDistance))}</span>
+                                    <span>Jaccard: ${escapeHtml(formatValue(similarLine.jaccardDistance))}</span>
+                                </div>
+                                <div class="match-code">
+                                    <pre class="code">${escapeHtml(formatLineNumber(line.lineIndex) + " " + (line.content || ""))}</pre>
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function renderTreeSimilarity(codeTreeSimilarityList) {
+            const items = asArray(codeTreeSimilarityList);
+            if (items.length === 0) {
+                return "";
+            }
+
+            return `
+                <div class="tree-list">
+                    <h3 class="tree-title">Tree similarity</h3>
+                    ${items.map(item => `
+                        <div class="tree-item">
+                            <div>
+                                <strong>${escapeHtml(item.project || "Unknown project")}</strong><br>
+                                ${escapeHtml(item.codeFileName || "Unknown file")}
+                            </div>
+                            <span class="pill warn">Score: ${escapeHtml(formatValue(item.similarityScore))}</span>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        function renderRawReport(report) {
+            return `
+                <details class="raw-toggle">
+                    <summary>Raw JSON</summary>
+                    <pre>${escapeHtml(JSON.stringify(report, null, 2))}</pre>
+                </details>
+            `;
+        }
+
+        function section(title, body) {
+            return `
+                <section class="section">
+                    <div class="section-header">
+                        <h2>${escapeHtml(title)}</h2>
+                    </div>
+                    <div class="section-body">${body}</div>
+                </section>
+            `;
+        }
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove("hidden");
+        }
+
+        function clearError() {
+            errorBox.textContent = "";
+            errorBox.classList.add("hidden");
+        }
+
+        function asArray(value) {
+            return Array.isArray(value) ? value : [];
+        }
+
+        function formatPercent(value) {
+            if (value === null || value === undefined || value === "") {
+                return "n/a";
+            }
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return String(value);
+            }
+            return number.toFixed(2) + "%";
+        }
+
+        function formatValue(value) {
+            if (value === null || value === undefined || value === "") {
+                return "n/a";
+            }
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return String(value);
+            }
+            return Number.isInteger(number) ? String(number) : number.toFixed(4);
+        }
+
+        function formatLineNumber(value) {
+            if (value === null || value === undefined || value === "") {
+                return "-";
+            }
+            return String(value);
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
         }
     </script>
 </body>
