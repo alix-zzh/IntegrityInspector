@@ -139,7 +139,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven-assembly-plugin.version}</version>
                 <configuration>
-                    <finalName>integrity-inspector-${version}</finalName>
+                    <finalName>integrity-inspector-${project.version}</finalName>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>

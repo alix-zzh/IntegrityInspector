@@ -1,0 +1,103 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: write
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  maven-quality:
+    name: Maven quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Python for diff coverage
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build, test, coverage, PMD and CPD
+        run: mvn -B -ntp package
+
+      - name: Install diff-cover
+        run: python -m pip install --upgrade diff-cover
+
+      - name: Enforce changed-line coverage
+        run: |
+          git fetch origin master --depth=1
+          diff-cover target/site/jacoco/jacoco.xml \
+            --compare-branch=origin/master \
+            --fail-under=90 \
+            --html-report target/site/diff-coverage.html \
+            --markdown-report target/site/diff-coverage.md
+
+      - name: Upload quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: |
+            target/site/jacoco/
+            target/site/diff-coverage.html
+            target/site/diff-coverage.md
+            target/site/pmd.html
+            target/site/cpd.html
+          if-no-files-found: ignore
+
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+
+  codeql:
+    name: CodeQL analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      - name: Build for CodeQL
+        run: mvn -B -ntp -DskipTests '-Djacoco.skip=true' compile
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

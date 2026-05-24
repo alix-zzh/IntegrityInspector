@@ -37,6 +37,8 @@ mvn package
 target/integrity-inspector-0.9.0.jar
 ```
 
+GitHub Actions runs the same quality gate for pull requests to `master`, plus changed-line coverage, dependency review, and CodeQL analysis. See `docs/CI_CD.md` for branch protection and release setup.
+
 ## CLI Usage
 
 Show CLI help:
@@ -158,6 +160,7 @@ report_ProjCheck.json
 - `docs/CONFIGURATION.md`: config schema and examples.
 - `docs/REPORT_FORMAT.md`: report schema and metrics.
 - `docs/EXTENSIONS.md`: how to add language readers or extension aliases.
+- `docs/CI_CD.md`: GitHub Actions, required PR checks, branch protection, and release flow.
 - `docs/TROUBLESHOOTING.md`: common issues and fixes.
 - `docs/MAINTENANCE.md`: verification checklist for future code and docs changes.
 

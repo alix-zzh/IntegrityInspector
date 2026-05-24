@@ -13,6 +13,8 @@ mvn package
 
 Both commands should pass. `mvn test` enforces line and branch coverage gates. `mvn package` also runs PMD, CPD, and jar assembly.
 
+CI/CD changes should also keep `.github/workflows/pr-quality.yml`, `.github/workflows/release.yml`, `.github/dependabot.yml`, and `docs/CI_CD.md` aligned.
+
 ## Demo Verification
 
 Run the Unix-style demo command on Linux, macOS, or Windows with Git Bash/WSL:
@@ -63,6 +65,7 @@ When updating code, keep these files aligned:
 - `docs/CONFIGURATION.md`
 - `docs/REPORT_FORMAT.md`
 - `docs/EXTENSIONS.md`
+- `docs/CI_CD.md`
 - `docs/TROUBLESHOOTING.md`
 - `demo/config.sample.json`
 - `demo/run-demo.sh`
