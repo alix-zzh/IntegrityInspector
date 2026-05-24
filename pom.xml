@@ -14,7 +14,7 @@
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <maven-pmd-plugin.version>3.26.0</maven-pmd-plugin.version>
 
-        <commons-text.version>1.13.0</commons-text.version>
+        <commons-text.version>1.15.0</commons-text.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
 
         <slf4j.version>2.0.7</slf4j.version>
