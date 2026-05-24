@@ -6,7 +6,7 @@
     "minLineLength": 1,
     "levenshteinSimilarityPercent": 0.8,
     "multithreadingConfig": {"threadsCount": 2},
-    "reportResultFormat": "JSON"
+    "reportResultFormat": "json"
   },
   "parseCodeConfig": {
     "needParseTree": false,

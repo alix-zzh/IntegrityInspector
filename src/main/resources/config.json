@@ -27,11 +27,11 @@
       ],
       "java": [
         "import",
-        "from"
+        "package"
       ],
       "python": [
         "import",
-        "package"
+        "from"
       ],
       "js": [
         "import",

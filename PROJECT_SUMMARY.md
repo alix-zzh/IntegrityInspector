@@ -1,190 +1,127 @@
-# IntegrityInspector — Project Summary
+# IntegrityInspector Project Summary
 
-This document collects essential information for onboarding, exploration and task planning.
+This summary is a compact onboarding reference. See `README.md` for user-facing usage and `ARCHITECTURE.md` for deeper design details.
 
-## Quick facts
-- Language: Java (Maven project)
-- Main class: io.integrityinspector.app.App
-- Version: 0.9.0 (from pom.xml)
-- Build: mvn clean package; produces jar-with-dependencies via maven-assembly-plugin
-- Source layout: standard Maven: src/main/java, src/test/java, resources
+## Quick Facts
 
-## Architecture by Packages
-- io.integrityinspector.app
-  - Key classes: App, AppParameters, AppCoreComponents, AppCoreComponentsFactory
-  - Purpose: CLI glue, wiring, and bootstrap
-  - Detailed: App is the entry point; it parses CLI args, loads app config via AppConfigReader, constructs core components via AppCoreComponentsFactory, and selects the appropriate IntegrityInspector implementation (Single or Multiple project mode) to execute analysis.
-- io.integrityinspector.config
-  - Key classes: AppConfig, AppConfigReader, AdditionalFileExtensionConfig, ParserConfig, MultipleProjectCheckConfig
-  - Purpose: configuration model and loader
-  - Details: AppConfig aggregates configuration for analysis, parsing, and multi-project checks. AppConfigReader loads the JSON config (default from resources or a provided path) using Gson and logs its activity.
-- io.integrityinspector.Inspector
-  - Key: IntegrityInspector, SingleProjectIntegrityInspector, MultipleProjectIntegrityInspector
-  - Purpose: orchestrate analysis per project/workspace
-- io.integrityinspector.parser.reader.project
-  - Key: DefaultProjectParser, ProjectParserFactory, DefaultProjectCodeParser
-  - Purpose: parse a single project and produce CodeFile(s) or CodeFileTree
-- io.integrityinspector.parser.reader.file
-  - Key: CodeReaderFactory, CodeReaderFactoryFactory, CodeReader, CodeFileReader, IpynbReader
-  - Purpose: read files using language-specific readers, with support for extra extensions
-- io.integrityinspector.parser.cleaner.line
-  - Key: DefaultLineCleaner, LineCleaner, PythonLineCommentCleaner
-  - Purpose: normalize and clean code lines before analysis
-- io.integrityinspector.parser.cleaner.comment
-  - Key: CommonFileCommentCleaner, PythonFileCommentCleaner, CommentCleaner
-- io.integrityinspector.antlr.core
-  - Key: DefaultCodeTreeParser, CodeTreeParser, CodeTreeNodeConverter
-  - Purpose: build code trees for structural comparison
-- io.integrityinspector.antlr.java
-- io.integrityinspector.antlr.python
-- io.integrityinspector.antlr.model
-- io.integrityinspector.model
-  - Key: CodeFile, CodeFileTree, Project, Analysis
-  - Purpose: data models used by parsing and analysis
-- io.integrityinspector.analysis
-  - Key: AnalysisCreator, AnalysisTask, various coefficient calculators
-  - Purpose: compute similarity metrics and create Analysis objects
-- io.integrityinspector.write
-  - Key: AnalysisWriter, AnalysisWriterFactory, JsonWriter, JsonWriterFactory, ConsoleWriter
-  - Purpose: persist and present results
-- io.integrityinspector.config
-  - (referred above)
+- Language: Java
+- Build tool: Maven
+- Java target: 21
+- Main class: `io.integrityinspector.app.App`
+- Version: `0.9.0`
+- Runnable jar after packaging: `target/integrity-inspector-0.9.0.jar`
+- Default config: `src/main/resources/config.json`
+- Test framework: JUnit 4
+- Coverage: JaCoCo with generated ANTLR classes excluded
 
-### Algorithms and data flow
-- Parsing: select appropriate CodeReader by extension; optionally parse code trees when configured
-- Cleaning: normalize lines and remove language-specific noise
-- Tree building: produce CodeTree/CodeFileTree via CodeTreeParser and converters
-- Similarity: compute tree similarity using TreeSimilarityCalculator and related coefs
-- Uniqueness: determine project-wise uniqueness using Zzh1 coefficients and percentage calculators
-- Startup sequence (detailed)
-- Bootstrapping: App.main creates AppParameters, initializes JCommander, parses CLI args and handles --help
-- Configuration: AppConfigReader loads AppConfig (from default or provided path) via readBasedOnParameters(parameters)
-- Core bootstrap: AppCoreComponentsFactory creates AppCoreComponents using the loaded AppConfig
-- Inspector selection: if parameters include a checking directory, use MultipleProjectIntegrityInspector; otherwise use SingleProjectIntegrityInspector
-- Execution: integrityInspector.process(parameters)
+## What The Tool Does
 
-- SingleProjectInspector flow:
-  1. Parse check project: parser.parseProject(checkFolder)
-  2. Parse baselines: parser.parseProjectListFromRootDir(parameters.getBaseLineProjectDir())
-  3. Create analysis: analysisCreator.create(checkProject, baselineProjects)
-  4. Write report: analysisWriter.write(analysis, checkFolder.getName())
+IntegrityInspector compares source-code projects and reports likely similarity/plagiarism signals.
 
-- MultipleProjectInspector flow:
-  1. Parse projects: projects = parser.parseProjectListFromRootDir(parameters.getCheckingDirectory())
-  2. For each project:
-     - baselineProjects = all other projects
-     - analysis = analysisCreator.create(checkProject, baselineProjects)
-     - if analysis.totalUniquenessPercentage > maxUniquenessPercentageForCreatingReport -> log skip
-     - else analysisWriter.write(analysis, projectName)
+Supported workflows:
 
-- Config loading details:
-- AppConfigReader.read(): loads default /config.json from resources
-- AppConfigReader.read(String filePath): loads config from given path
-- AppConfigReader.readBasedOnParameters(parameters): chooses config path based on parameters.configFile
+- Compare one checked project against a directory of baseline projects.
+- Compare every project in a directory against the other projects in the same directory.
 
-## Architecture overview
-- Core modules
-  - app
-    - App: entry point, wires CLI and core components
-    - AppParameters: CLI options (help, config, baseline, checking project, checking directory)
-    - AppCoreComponents: holds ProjectParser, AnalysisCreator, AnalysisWriter, AppConfig
-    - AppCoreComponentsFactory: constructs components based on AppConfig
-  - config
-    - AppConfig: aggregates AnalysisConfig, ParserConfig, MultipleProjectCheckConfig
-    - AppConfigReader: reads config.json from classpath or file system
-    - AdditionalFileExtensionConfig, ParserConfig, MultipleProjectCheckConfig
-  - parser.reader
-    - project
-      - DefaultProjectParser, ProjectParserFactory, DefaultProjectCodeParser
-    - file
-      - CodeReaderFactory, CodeReaderFactoryFactory, CodeReader, CodeReaderContext readers, IpynbReader
-  - model
-    - CodeFile, CodeFileTree, Project, Analysis, etc.
-  - antlr
-    - Java, Python parsers and converters, DefaultCodeTreeParser
-  - Inspector
-    - IntegrityInspector (interface), SingleProjectIntegrityInspector, MultipleProjectIntegrityInspector
-  - write
-    - core: AnalysisWriter, AnalysisWriterFactory
-    - json: JsonWriter, JsonWriterFactory
-    - console: ConsoleWriter, ConsoleWriterFactory
-- Build-time and dependencies
-  - Lombok, Gson, Commons Lang/Text, SLF4J, JCommander, ANTLR4 runtime, Zhang-Shasha (tree distance)
-  - JUnit for tests
-- Config and inputs
-  - Default config path: /config.json (located in resources)
-  - AppConfig comprises analysisConfig, parseCodeConfig, multipleProjectCheckConfig
+The analysis is primarily line-based. When `parseCodeConfig.needParseTree` is enabled, Java and Python files also get code-tree similarity data.
 
-## Notable usage patterns
-- Two user workflows:
-  - SingleProjectIntegrityInspector: compares one project against baseline set
-  - MultipleProjectIntegrityInspector: compares multiple projects against each other
-- End-to-end pipeline: parse input projects -> analyze similarities -> write reports
+## Inputs
 
-## Test Coverage
-- Current status: We have smoke/integration tests for startup flow and unit tests for core components (cleaners, converters) in src/test/java. Coverage of parsing, analysis, and reporting paths is partial.
-- Gaps:
-  1) Parser pipeline: DefaultProjectParser, ProjectCodeParser, CodeFileReader interactions across languages
-  2) Terminal/code-tree path: parsing trees via DefaultCodeTreeParser and CodeTreeNodeConverter
-  3) Tree-based analysis: TreeAnalysisCreator, TreeSimilarityCalculator, and CodeTree-based analysis
- 4) JSON/Console reporting: JsonWriter behavior and console writer integration with Analysis objects
-  5) Config loading robustness: various combinations of AppConfigReader, ParserConfig, and MultipleProjectCheckConfig
-- Proposed plan:
-  - Add focused unit tests for CodeReaderFactoryFactory mapping and for DefaultProjectParser/ProjectCodeParser with small in-memory directories
-  - Add tests for IpynbReader and Python/Java code tree converters with small synthetic inputs
-  - Add integration tests that mock analysis components to test the end-to-end pipeline without heavy IO
-  - Ensure Jacoco reports are generated in CI and locally to visualize coverage gaps
+The CLI accepts:
 
-## How to run
-- Build: mvn clean package
-- Run example: java -jar target/integrity-inspector-0.9.0-jar-with-dependencies.jar --help
-- CLI options (from AppParameters):
-  - -ch-prj / --checking-project: path to a single project
-  - -b / --baseline-projects: path to baseline dir
-  - -ch-dir / --checking-directory: path to directory with multiple projects
-  - -cf / --config: path to config.json
-  - -h / --help: show usage
+- `--checking-project` / `-ch-prj`: one project under check.
+- `--baseline-projects` / `-b`: directory of baseline projects.
+- `--checking-directory` / `-ch-dir`: directory where each subdirectory is a project to compare with the others.
+- `--config` / `-cf`: JSON config file.
+- `--help` / `-h`: print CLI help.
 
-## Next steps
-- Add sample config.json and small sample datasets
-- Consider CI workflow for build and tests
-- Expand docs with API/architecture diagrams
+If `--checking-directory` is present, the app uses multi-project mode. Otherwise it uses single-project mode.
 
-## Notes and questions
-- Do you want me to add a minimal sample config and demo data to the repo now?
-- Should I set up a CI workflow (GitHub Actions) to run mvn test and package on push?
+## Outputs
 
-- Demo Environment
-- This repository now includes a minimal end-to-end demo setup:
-- demo/config.sample.json
-- demo_projects/check/ProjCheck/Main.java
-- demo_projects/baseline/ProjA/Main.java
-- demo_projects/baseline/ProjB/Main.java
-- demo/run-demo.sh
-- demo/run-demo.bat
+When `analysisConfig.reportResultFormat` is exactly `json`, reports are written as:
 
-- How to run in demo:
-- Build: mvn clean package
-- Run (UNIX): bash demo/run-demo.sh
-- Run (Windows): demo/run-demo.bat
+```text
+report_<project-name>.json
+```
 
-- Parallel processing and architecture notes
+The report is written to the process working directory. Any other report format value falls back to console logging.
 
+## Configuration Notes
 
-### Selected Classes Map
-- io.integrityinspector.app: App, AppParameters, AppCoreComponents, AppCoreComponentsFactory
-- io.integrityinspector.config: AppConfig, AppConfigReader, AdditionalFileExtensionConfig, ParserConfig, MultipleProjectCheckConfig
-- io.integrityinspector.Inspector: IntegrityInspector, SingleProjectIntegrityInspector, MultipleProjectIntegrityInspector
-- io.integrityinspector.parser.reader.project: ProjectParserFactory, DefaultProjectParser, DefaultProjectCodeParser
-- io.integrityinspector.parser.reader.file: CodeReaderFactoryFactory, CodeReaderFactory, CodeReader, CodeFileReader, IpynbReader
-- io.integrityinspector.parser.cleaner.line: LineCleaner, DefaultLineCleaner, PythonLineCommentCleaner
-- io.integrityinspector.parser.cleaner.comment: CommentCleaner, CommonFileCommentCleaner, PythonFileCommentCleaner
-- io.integrityinspector.antlr.core: CodeTreeParser, CodeTreeNodeConverter, DefaultCodeTreeParser
-- io.integrityinspector.antlr.java: JavaCodeTreeNodeConverter
-- io.integrityinspector.antlr.python: PythonCodeTreeNodeConverter
-- io.integrityinspector.antlr.model: CodeTree
-- io.integrityinspector.model: CodeFile, CodeFileTree, Project, Analysis
-- io.integrityinspector.analysis: AnalysisCreator, Zzh1UniquenessCoefficientCalculator, DefualtZzh1UniquenessCoefficientCalculator, UniquenessPercentageCalculator
-- io.integrityinspector.write: AnalysisWriter, JsonWriter, ConsoleWriter
-- io.integrityinspector.checker: TreeSimilarityCalculator, FileTreeChecker, FileChecker, PlagiarismLineChecker
-- io.integrityinspector.app: App, AppParameters
+Important config sections:
+
+- `analysisConfig`: similarity thresholds, limits, threading, report format.
+- `parseCodeConfig`: parser mode, supported extension filter, extension aliases, ignored line prefixes.
+- `multipleProjectCheckConfig`: multi-project report skip threshold.
+
+Important behavior:
+
+- `listOfSupportedExtensions` is optional. Null or empty means no extension filter.
+- `additionalFileExtensions` maps extra extensions to existing reader keys.
+- `reportResultFormat` is case-sensitive.
+- `needParseTree=true` enables tree-backed readers for Java, Python, and `.ipynb`. Other extensions use a not-supported tree marker unless mapped to an existing tree reader.
+- See `docs/CONFIGURATION.md` for field-level config behavior.
+- See `docs/REPORT_FORMAT.md` for report fields and metric interpretation.
+
+## Current Package Responsibilities
+
+- `app`: CLI and bootstrap.
+- `config`: config objects and JSON loading.
+- `parser.reader.project`: project directory traversal and file collection.
+- `parser.reader.file`: file readers, extension mapping, notebook extraction, line extraction.
+- `parser.cleaner`: comment and line normalization.
+- `antlr`: Java/Python parsing and `CodeTree` conversion.
+- `checker`: line and tree similarity checks.
+- `analysis`: aggregation, baseline limiting, uniqueness, ZZH1 coefficient, multithreaded execution.
+- `write`: JSON and console report output.
+- `model`: domain data objects.
+
+## Build Commands
+
+```bash
+mvn test
+mvn package
+```
+
+`mvn test` enforces:
+
+- line coverage >= 90%
+- branch coverage >= 90%
+
+`mvn package` runs tests, JaCoCo checks, PMD, CPD, and jar assembly.
+
+## Demo
+
+Demo files:
+
+- `demo/config.sample.json`
+- `demo_projects/check/ProjCheck/Main.java`
+- `demo_projects/baseline/ProjA/Main.java`
+- `demo_projects/baseline/ProjB/Main.java`
+- `demo/run-demo.sh`
+- `demo/run-demo.bat`
+- expected output: `report_ProjCheck.json`
+
+Run:
+
+Linux, macOS, or Windows with Git Bash/WSL:
+
+```bash
+bash demo/run-demo.sh
+```
+
+Windows:
+
+```bat
+demo\run-demo.bat
+```
+
+## Known Technical Notes
+
+- Generated ANTLR parser/lexer classes are committed under `src/main/java/io/integrityinspector/antlr/*/gen`.
+- Do not edit generated ANTLR classes manually.
+- The generated ANTLR code may emit a tool/runtime version warning during tests.
+- The class name `DefualtZzh1UniquenessCoefficientCalculator` is misspelled in code and kept as-is for compatibility.
+- `docs/TROUBLESHOOTING.md` lists common report, config, and tree-mode issues.
+- `docs/MAINTENANCE.md` lists checks to keep docs, demo, and code aligned.

@@ -1,5 +1,6 @@
 @echo off
 echo Building demo bundle...
-mvn -q -e package
-echo Running demo: checking-directory and config.json
-java -jar target\integrity-inspector-0.9.0-jar-with-dependencies.jar --config demo\config.sample.json --checking-directory demo_projects/check
+call mvn -q -e package
+if errorlevel 1 exit /b %errorlevel%
+echo Running demo: single project against baselines
+java -jar target\integrity-inspector-0.9.0.jar --config demo\config.sample.json --checking-project demo_projects\check\ProjCheck --baseline-projects demo_projects\baseline
