@@ -103,7 +103,7 @@ jobs:
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: integrity-inspector-${{ steps.version.outputs.release }}
           path: target/integrity-inspector-${{ steps.version.outputs.release }}.jar
