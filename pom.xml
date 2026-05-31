@@ -12,7 +12,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
-        <maven-pmd-plugin.version>3.26.0</maven-pmd-plugin.version>
+        <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
 
         <commons-text.version>1.15.0</commons-text.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
